@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+data/
+output/
+spark-events/
+logs/
+work/
+run/
+metastore_db/
+derby.log
+spark-warehouse/
+*.tar.gz

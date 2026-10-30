@@ -1,0 +1,4 @@
+# Spark 4.0.x: needs Java 17 or 21, Python 3.9+.
+# pip-installed PySpark includes the full Spark runtime (jars, spark-class, History Server),
+# so no separate Apache Spark download is needed.
+pyspark==4.0.5
