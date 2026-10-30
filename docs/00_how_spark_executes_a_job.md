@@ -15,7 +15,7 @@ separate Java processes (JVMs) exist on your machine:
 | **Master** | 1 | Keeps a list of workers and how many cores/memory each has free. Gives resources to applications. Does **not** process data. | http://127.0.0.1:8080 |
 | **Worker** | 2 | Each worker offers 2 cores and 3 GB to the master. When an application starts, the worker launches an **executor** process for it. Does **not** process data itself. | http://127.0.0.1:8081, :8082 |
 | **Driver** | 1 per application | Started by your Python script. Runs your DataFrame code, builds the plan, splits it into tasks, sends tasks to executors, tracks progress, serves the live UI. | http://127.0.0.1:4040 (while running) |
-| **Executor** | 2 per application (1 per worker) | Runs tasks. Each executor has 2 cores, so it runs up to 2 tasks at the same time. Holds a 2 GB Java heap. Reads input, shuffles data, writes output. | Executors tab |
+| **Executor** | 2 per application (1 per worker) | Runs tasks. Each executor has 2 cores, so it runs up to 2 tasks at the same time. Holds a 1 GB Java heap. Reads input, shuffles data, writes output. | Executors tab |
 | **History Server** | 1 | Reads event log files from `spark-events/` and shows the UI of applications that already finished. | http://127.0.0.1:18080 |
 
 So for one application: **2 executors × 2 cores = 4 task slots**. At most 4 tasks run at the same moment.
@@ -106,21 +106,23 @@ A shuffle costs: serialization, disk writes, disk reads, network transfer, and a
 
 ## 5. Where memory goes inside an executor
 
-Each executor JVM in this lab has a 2 GB heap. Spark divides it roughly like this
-(Spark's "unified memory manager"):
+Each executor JVM in this lab has a 1 GB heap (`EXECUTOR_MEMORY` in `conf/cluster.env`).
+Spark divides it roughly like this (Spark's "unified memory manager"):
 
 ```
-2048 MB heap
+1024 MB heap
  - 300 MB reserved for Spark internals
- = 1748 MB usable
-   x 0.6 (spark.memory.fraction)  -> ~1049 MB "Spark memory", shared by:
+ =  724 MB usable
+   x 0.6 (spark.memory.fraction)  -> ~434 MB "Spark memory", shared by:
         execution memory: sort buffers, hash tables for joins/aggregations, shuffle buffers
         storage memory:   cached DataFrames (df.cache())
-   the other 40% (~699 MB) -> "user memory": Java objects, UDF data, Spark metadata
+   the other 40% (~290 MB) -> "user memory": Java objects, UDF data, Spark metadata
 ```
 
-The ~1 GB of execution memory is **shared by the tasks running at the same time** on that
-executor (2 here). A task can use at most 1/N of it (N = running tasks), so roughly 500 MB to 1 GB.
+The ~434 MB of execution memory is **shared by the tasks running at the same time** on that
+executor (2 here). With N tasks running, each task is guaranteed at least 1/(2N) of it and can
+use at most 1/N. With 2 running tasks, that is roughly 110 MB to 217 MB per task.
+(With a 2 GB executor the same calculation gives ~1049 MB, so about 260–525 MB per task.)
 
 When a task needs more memory than it can get (for example, it must sort more rows than fit):
 - It writes what it has to a temporary file on disk (**spill**), frees the memory, and continues.

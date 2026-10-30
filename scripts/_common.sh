@@ -71,6 +71,8 @@ activate_venv() {
   # Bind everything to loopback: avoids macOS hostname / firewall problems.
   export SPARK_LOCAL_IP=127.0.0.1
   export SPARK_LOG_DIR="$LOG_DIR"
+  # Heap cap for master / worker / History Server JVMs (from conf/cluster.env)
+  export SPARK_DAEMON_MEMORY="${SPARK_DAEMON_MEMORY:-512m}"
 }
 
 wait_for_url() {

@@ -24,16 +24,30 @@ Experiments are added one at a time, after the previous one has been investigate
 | **Java** | **17 or 21** | Spark 4.0 dropped Java 8 and 11. Java 22+ is not supported by Spark 4.0. |
 | **Python** | **3.9 – 3.13** (3.12 recommended) | PySpark 4.0 needs 3.9+. Driver and executors must use the same minor version. The lab runs both from `.venv`, so they match. |
 | PySpark | 4.0.5 (pinned in `requirements.txt`) | The pip package contains the full Spark runtime: jars, `spark-class`, History Server. No separate Spark download is needed. |
-| RAM | 8 GB minimum, 16 GB recommended | Default cluster uses ~6 GB for executors + 2 GB for the driver |
+| RAM | 8 GB minimum | Default settings use ~5 GB in total (measured peak 4.7 GB for all Spark processes). Close heavy apps while running. On 16 GB you can raise memory in `conf/cluster.env`. |
 | Disk | ~3 GB free | Generated data, shuffle files, event logs |
 
 ### Install Java 17 on a Mac (if `check_env.sh` says it is missing)
+
+macOS has a `/usr/bin/java` command even without Java installed. It is only a placeholder,
+so `java -version` fails until you install a JDK.
+
+**Option A: installer (no Homebrew needed).** Download the Temurin 17 `.pkg` from
+https://adoptium.net/temurin/releases/?version=17&os=mac (choose **aarch64** for Apple Silicon M1/M2/M3/M4,
+**x64** for Intel), then double-click it.
+
+**Option B: Homebrew.**
 ```bash
 brew install openjdk@17
 ```
 
 ```bash
 sudo ln -sfn "$(brew --prefix)/opt/openjdk@17/libexec/openjdk.jdk" /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+```
+
+Check it worked:
+```bash
+/usr/libexec/java_home -v 17
 ```
 
 The scripts find Java automatically (`JAVA_HOME`, `/usr/libexec/java_home`, or Homebrew paths).
@@ -82,8 +96,8 @@ While an application runs, its live UI is at **http://127.0.0.1:4040**.
 ./scripts/stop_cluster.sh     # stops everything; event logs stay in spark-events/
 ```
 
-**Cluster shape** (edit `conf/cluster.env`): 2 workers × 2 cores × 3 GB. Each application
-gets 2 executors with 2 cores and a 2 GB heap each, so **4 tasks run in parallel**. Using a real
+**Cluster shape** (edit `conf/cluster.env`): 2 workers × 2 cores. Each application
+gets 2 executors with 2 cores and a 1 GB heap each, plus a 1 GB driver, so **4 tasks run in parallel**. Using a real
 standalone cluster (instead of `local[*]`) means you see separate executor processes in the
 Executors tab, real shuffle traffic between executors, and real executor logs.
 

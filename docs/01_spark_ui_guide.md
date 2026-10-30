@@ -166,7 +166,7 @@ For each metric: **Meaning** · **What it tells you** · **Concerning pattern** 
 ### Peak Execution Memory
 - **Meaning:** the largest amount of execution memory the task's operators (sort, hash
   aggregate, hash join) held at once.
-- **Concerning:** close to the per-task share of execution memory (about 0.5–1 GB in this lab),
+- **Concerning:** close to the per-task share of execution memory (about 110–217 MB per task in this lab, with 1 GB executors running 2 tasks each),
   especially together with spill.
 - **Compare against:** across tasks (Median against Max), and against `spark.executor.memory`.
 

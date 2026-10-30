@@ -35,13 +35,18 @@ if pick_java_home; then
   echo "  JAVA_HOME=$JAVA_HOME"
   echo "  major version: $(java_major "$JAVA_HOME/bin/java")  -> OK (Spark 4.0 supports 17 and 21)"
 else
-  if command -v java >/dev/null 2>&1; then
-    echo "  Found java $(java_major "$(command -v java)") on PATH, but Spark 4.0 needs Java 17 or 21."
+  found=""
+  command -v java >/dev/null 2>&1 && found=$(java_major "$(command -v java)")
+  if [ -n "$found" ]; then
+    echo "  Found Java $found on PATH, but Spark 4.0 needs Java 17 or 21."
   else
-    echo "  No Java found."
+    # On macOS /usr/bin/java always exists, but it is only a placeholder until a JDK is installed.
+    echo "  No Java installed (on macOS, /usr/bin/java is only a placeholder until a JDK is installed)."
   fi
-  echo "  Install with:  brew install openjdk@17"
-  echo "  Then:          sudo ln -sfn \$(brew --prefix)/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk"
+  echo "  Install Java 17, either:"
+  echo "    a) Homebrew:  brew install openjdk@17"
+  echo "                  sudo ln -sfn \$(brew --prefix)/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk"
+  echo "    b) Installer: https://adoptium.net/temurin/releases/?version=17&os=mac  (choose the .pkg for your CPU: aarch64 = Apple Silicon)"
   ok=0
 fi
 
@@ -54,7 +59,7 @@ else
   echo "  CPU cores: $(nproc)"
   echo "  RAM: $(free -g | awk '/Mem:/ {print $2}') GB"
 fi
-echo "  Lab cluster will use: $NUM_WORKERS workers x $WORKER_CORES cores, $WORKER_MEMORY each (see conf/cluster.env)"
+echo "  Lab cluster: $NUM_WORKERS executors x $EXECUTOR_CORES cores x $EXECUTOR_MEMORY heap, driver $DRIVER_MEMORY (see conf/cluster.env)"
 
 echo
 if [ -x "$VENV/bin/python" ]; then

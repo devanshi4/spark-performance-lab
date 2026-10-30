@@ -22,7 +22,7 @@ def build_session(app_name: str, extra_conf: dict | None = None) -> SparkSession
     What happens when this runs:
       1. Python starts a JVM on your machine. That JVM is the DRIVER: it plans the work.
       2. The driver registers with the master at spark://127.0.0.1:7077 and asks for cores/memory.
-      3. The master tells each worker to start an EXECUTOR JVM (2 cores, 2 GB each by default).
+      3. The master tells each worker to start an EXECUTOR JVM (2 cores, 1 GB heap each by default).
       4. Executors connect back to the driver and wait for tasks.
     Nothing reads data yet. Data is only read when an action (count, write, collect) runs.
     """

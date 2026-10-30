@@ -12,8 +12,8 @@
    go to the **same** shuffle partition. The other 15 partitions get only about 0.6M rows each.
 3. In the join stage, the task for that partition must fetch ~300 MB of shuffle data, **sort
    21M+ rows** by merchant_id (SortMergeJoin needs both sides sorted), then merge them.
-4. Its sort buffer is larger than its share of execution memory (~0.5–1 GB in a 2 GB executor
-   with 2 cores), so it **spills** sorted runs to disk and merges them back. That makes it even slower.
+4. Its sort buffer is larger than its share of execution memory (roughly 110–217 MB in a 1 GB executor
+   running 2 tasks), so it **spills** sorted runs to disk and merges them back. That makes it even slower.
 5. The other 15 tasks finish in under a second. 3 of the 4 cores then sit idle, waiting for one task.
    The stage (and the whole job) takes as long as that single task.
 
