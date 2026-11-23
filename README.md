@@ -1,202 +1,139 @@
-# PySpark Performance Troubleshooting Lab
+# Spark Performance Lab
 
-A hands-on lab for learning how Data Engineers find and fix Spark performance problems
-using the **real** Spark UI. Every number you look at comes from an actual Spark execution
-on a local multi-executor cluster. There are no screenshots and no simulated metrics.
+A lab where I reproduce common Spark performance problems on a real multi-executor cluster, diagnose them in the Spark UI, and compare fixes using the metrics Spark itself reports. No screenshots and no simulated numbers.
+
+**Stack:** PySpark 4.0 · Spark standalone cluster · Spark UI · History Server · Spark REST API · Python · Bash
+
+> Part of my portfolio at **[devanshi4.github.io](https://devanshi4.github.io)**
+
+---
+
+## The problem
+
+Most slow Spark jobs come down to a handful of causes: skewed keys, spilling to disk, the wrong partition count, the wrong join strategy. Reading about them is easy. Finding them in a real job means knowing which numbers in the Spark UI to look at and what they mean together. This lab builds each problem on purpose, investigates it, and measures each fix.
 
 | # | Experiment | Status |
 |---|---|---|
-| 1 | Data skew | ✅ ready |
+| 1 | Data skew | done |
 | 2 | Memory spill | planned |
-| 3 | Partition count (too few / too many / appropriate) | planned |
-| 4 | Join strategy (SortMergeJoin vs BroadcastHashJoin) | planned |
-| 5 | Out-of-memory and task failures (isolated) | planned |
+| 3 | Partition count | planned |
+| 4 | Join strategy (sort-merge vs broadcast) | planned |
+| 5 | Out-of-memory and task failures | planned |
 
-Experiments are added one at a time, after the previous one has been investigated.
+## How it works
+
+```mermaid
+flowchart LR
+    A[Data generator] -->|Parquet| B[(data/)]
+    B --> C[Baseline job]
+    B --> D[Fixed versions]
+    C --> E[Spark UI + History Server]
+    D --> E
+    C -->|REST API metrics| F[(results/*.json)]
+    D -->|REST API metrics| F
+    F --> G[compare_results.py]
+    G --> H[Comparison report]
+```
+
+1. **Cluster.** Two workers with two cores each, running as separate JVMs on one machine. This gives real executors, real shuffle traffic between them, and real executor logs, unlike `local[*]`.
+2. **Baseline.** Each experiment has a slow version written on purpose, run with `--hold` so the live UI stays open for investigation.
+3. **Fixes.** Each fix runs on the same data with the same shuffle settings, so the only difference is the fix.
+4. **Measure.** After every run, the runner saves Spark's own metrics from its REST API. A verify script checks every version returns the same answer, and a compare script writes a side-by-side report.
+
+## Experiment 1: data skew
+
+**Scenario.** A payments company joins 30 million card transactions to 1 million merchants for a daily revenue report by category and country. One merchant owns most of the transactions, so in a sort-merge join all of its rows hash to the same shuffle partition, and one task does most of the work while the rest finish early.
+
+**Fixes compared**
+
+- **Adaptive Query Execution (AQE) skew join.** Spark detects the oversized partition at runtime and splits it. No code changes needed, but it only splits partitions above 256 MB.
+- **Salting.** The hot merchant's join key gets a salt from 0 to 63, spreading its rows over all partitions. Its one row in the merchants table is copied 64 times so every salted key still matches.
+- **Aggregate before joining.** The report only needs sums and counts, so transactions are first reduced to one row per merchant per day. The join then handles a much smaller table and the skew disappears. Sum and count are carried through so the average is computed correctly at the end.
+
+## Design decisions
+
+- **A real cluster, not local mode.** Separate executor processes make shuffle, spill and executor logs show up the way they do in production.
+- **Same shuffle settings everywhere.** Every version of an experiment uses 16 shuffle partitions, so partition count can't hide or create the problem being tested.
+- **Correctness first.** Every fix must produce exactly the same output as the baseline before its speed counts.
+- **Only reported metrics.** Results come from Spark's REST API, the same data the UI shows. Nothing is estimated.
+- **Honest about noise.** On a 4-core laptop, run times vary 10–20% between runs, and removing skew doesn't always cut total run time. The report shows the task-level metrics that explain why.
+
+## Run it locally
+
+You need Java 17 or 21, Python 3.9–3.13, about 8 GB of RAM and 3 GB of free disk.
+
+1. Check your environment and install PySpark into a virtual environment:
+
+   ```bash
+   ./scripts/check_env.sh
+   ```
+
+   ```bash
+   ./scripts/setup.sh
+   ```
+
+2. Start the cluster. The master UI is at http://127.0.0.1:8080 and the History Server at http://127.0.0.1:18080.
+
+   ```bash
+   ./scripts/start_cluster.sh
+   ```
+
+3. Generate the data (about 800 MB), then run the baseline with the live UI held open on :4040:
+
+   ```bash
+   ./scripts/run.sh data_generation.generate_exp01_data
+   ```
+
+   ```bash
+   ./scripts/run.sh spark_jobs.before.exp01_skewed_join --hold
+   ```
+
+4. Run the three fixes, check they match, and build the comparison report:
+
+   ```bash
+   ./scripts/run.sh spark_jobs.optimized.exp01_aqe_skew_join
+   ```
+
+   ```bash
+   ./scripts/run.sh spark_jobs.optimized.exp01_salted_join
+   ```
+
+   ```bash
+   ./scripts/run.sh spark_jobs.optimized.exp01_aggregate_before_join
+   ```
+
+   ```bash
+   ./scripts/run.sh scripts.verify_exp01_outputs
+   ```
+
+   ```bash
+   ./scripts/run.sh scripts.compare_results exp01_data_skew
+   ```
+
+5. Stop everything when done. Event logs stay in `spark-events/`.
+
+   ```bash
+   ./scripts/stop_cluster.sh
+   ```
+
+## Project structure
+
+```
+├── conf/                # cluster shape and ports (cluster.env), shared paths (settings.py)
+├── data_generation/     # synthetic, deliberately skewed datasets
+├── spark_jobs/
+│   ├── common/          # SparkSession, REST API metrics collector, run wrapper
+│   ├── before/          # baseline (slow) versions
+│   └── optimized/       # fixed versions
+├── scripts/             # setup, cluster start/stop, run, verify, compare
+└── docs/                # how Spark executes a job, Spark UI guide, experiment write-ups
+```
+
+## Status and next steps
+
+- Commit the experiment 1 comparison report with measured task-level results.
+- Build experiments 2 to 5: memory spill, partition count, join strategy, and out-of-memory failures.
 
 ---
 
-## 1. Requirements and compatibility
-
-| Component | Version | Why |
-|---|---|---|
-| macOS | Apple Silicon or Intel | Linux also works |
-| **Java** | **17 or 21** | Spark 4.0 dropped Java 8 and 11. Java 22+ is not supported by Spark 4.0. |
-| **Python** | **3.9 – 3.13** (3.12 recommended) | PySpark 4.0 needs 3.9+. Driver and executors must use the same minor version. The lab runs both from `.venv`, so they match. |
-| PySpark | 4.0.5 (pinned in `requirements.txt`) | The pip package contains the full Spark runtime: jars, `spark-class`, History Server. No separate Spark download is needed. |
-| RAM | 8 GB minimum | Default settings use ~5 GB in total (measured peak 4.7 GB for all Spark processes). Close heavy apps while running. On 16 GB you can raise memory in `conf/cluster.env`. |
-| Disk | ~3 GB free | Generated data, shuffle files, event logs |
-
-### Install Java 17 on a Mac (if `check_env.sh` says it is missing)
-
-macOS has a `/usr/bin/java` command even without Java installed. It is only a placeholder,
-so `java -version` fails until you install a JDK.
-
-**Option A: installer (no Homebrew needed).** Download the Temurin 17 `.pkg` from
-https://adoptium.net/temurin/releases/?version=17&os=mac (choose **aarch64** for Apple Silicon M1/M2/M3/M4,
-**x64** for Intel), then double-click it.
-
-**Option B: Homebrew.**
-```bash
-brew install openjdk@17
-```
-
-```bash
-sudo ln -sfn "$(brew --prefix)/opt/openjdk@17/libexec/openjdk.jdk" /Library/Java/JavaVirtualMachines/openjdk-17.jdk
-```
-
-Check it worked:
-```bash
-/usr/libexec/java_home -v 17
-```
-
-The scripts find Java automatically (`JAVA_HOME`, `/usr/libexec/java_home`, or Homebrew paths).
-
----
-
-## 2. Setup (one time)
-
-```bash
-cd spark-perf-lab
-```
-
-```bash
-chmod +x scripts/*.sh
-```
-
-```bash
-./scripts/check_env.sh        # shows Python/Java versions and whether they are compatible
-```
-
-```bash
-./scripts/setup.sh            # creates .venv and installs PySpark
-```
-
-## 3. Start and stop the local cluster
-
-```bash
-./scripts/start_cluster.sh
-```
-
-This starts 4 background Java processes:
-
-| Process | URL | Purpose |
-|---|---|---|
-| Master | http://127.0.0.1:8080 | Manages workers and allocates their resources |
-| Worker 1, Worker 2 | http://127.0.0.1:8081, :8082 | Launch executors; executor logs (stdout/stderr) are linked here |
-| History Server | http://127.0.0.1:18080 | UI of finished applications (reads `spark-events/`) |
-
-While an application runs, its live UI is at **http://127.0.0.1:4040**.
-
-```bash
-./scripts/status.sh           # what is running
-```
-
-```bash
-./scripts/stop_cluster.sh     # stops everything; event logs stay in spark-events/
-```
-
-**Cluster shape** (edit `conf/cluster.env`): 2 workers × 2 cores. Each application
-gets 2 executors with 2 cores and a 1 GB heap each, plus a 1 GB driver, so **4 tasks run in parallel**. Using a real
-standalone cluster (instead of `local[*]`) means you see separate executor processes in the
-Executors tab, real shuffle traffic between executors, and real executor logs.
-
-## 4. Running things
-
-Always run modules through `scripts/run.sh`. It activates `.venv`, sets `JAVA_HOME`, and runs
-from the project root:
-
-```bash
-./scripts/run.sh <python.module.path> [--hold]
-```
-
-`--hold` keeps the application alive after the work finishes, so you can browse the live UI
-at :4040. Press Enter to end it. Without `--hold`, use the History Server.
-
-Each job run:
-1. prints the App ID and UI links,
-2. prints the physical plan (`explain`),
-3. runs the workload,
-4. reads the application's metrics from Spark's REST API (the same data the UI shows) and saves them to
-   `results/<experiment>/<variant>__<app-id>.json`.
-
-## 5. Experiment 1: Data skew
-
-Follow `docs/experiments/exp01_data_skew/part1_investigate.md`. In short:
-
-```bash
-./scripts/run.sh data_generation.generate_exp01_data                 # ~1 min, ~800 MB
-```
-
-```bash
-./scripts/run.sh spark_jobs.before.exp01_skewed_join --hold          # investigate in the UI
-```
-
-Then, after the investigation (Part 2):
-
-```bash
-./scripts/run.sh spark_jobs.optimized.exp01_aqe_skew_join
-```
-
-```bash
-./scripts/run.sh spark_jobs.optimized.exp01_salted_join
-```
-
-```bash
-./scripts/run.sh spark_jobs.optimized.exp01_aggregate_before_join
-```
-
-```bash
-./scripts/run.sh scripts.verify_exp01_outputs                        # all variants give the same answer
-```
-
-```bash
-./scripts/run.sh scripts.compare_results exp01_data_skew             # -> reports/exp01_data_skew_comparison.md
-```
-
-Smaller machine? Generate less data, for example `--rows 15000000`. Note that AQE only splits a skewed
-partition above 256 MB, so with much smaller data Fix A may not trigger. That is a real
-limitation worth observing.
-
-## 6. Project layout
-
-```
-conf/                    cluster.env (cluster shape, ports), settings.py (paths, shared config)
-data_generation/         synthetic dataset generators (run on the cluster, write Parquet to data/)
-spark_jobs/
-  common/                session.py (SparkSession for the cluster), metrics.py (REST API collector),
-                         runner.py (run → collect metrics → save)
-  before/                intentionally inefficient implementations
-  optimized/             improved implementations
-docs/
-  00_how_spark_executes_a_job.md   driver, executors, cores, partitions, tasks, shuffle, memory
-  01_spark_ui_guide.md             where to click; what every metric means; diagnosing by combining metrics
-  experiments/expNN_*/             part1_investigate.md (no answers), part2_root_cause_and_fixes.md
-results/                 raw metrics JSON per run (created when you run jobs)
-reports/                 comparison reports (generated by scripts/compare_results.py)
-scripts/                 setup, start/stop/status, run, compare, verify
-data/ output/ spark-events/ logs/ work/ run/   created at runtime (git-ignored)
-```
-
-`work/worker-N/app-.../<executor-id>/stderr` holds each executor's log on disk.
-The worker UI links to the same files.
-
-## 7. Troubleshooting
-
-| Symptom | Fix |
-|---|---|
-| `Spark master not reachable` | `./scripts/start_cluster.sh` |
-| Job waits forever with "Initial job has not accepted any resources" | Another application holds the cores. Check http://127.0.0.1:8080, and stop any app left running with `--hold`. |
-| Port 8080 / 4040 / 18080 already in use | Change the ports in `conf/cluster.env`, or stop the other program |
-| `UnsupportedClassVersionError` or a Java error at startup | Wrong Java. Run `./scripts/check_env.sh` |
-| macOS firewall prompt for "java" | Allow it. Everything binds to 127.0.0.1 only. |
-| History Server doesn't show the app yet | Wait ~5 s and refresh. Incomplete apps are listed under "Show incomplete applications". |
-| Out of disk | Delete `output/`, `work/`, and old `spark-events/` files |
-
-## 8. Honesty rules for results
-
-- Runtime differences on a 4-core laptop are small, and they vary by ±10–20% between runs. Run twice
-  before trusting a difference.
-- An optimization that removes skew or spill does not always reduce total runtime. The
-  comparison report shows the metrics that explain why.
-- Only metrics Spark actually reports are saved. Nothing is estimated.
+Built by **Devanshi Pandya** · [Portfolio](https://devanshi4.github.io) · [LinkedIn](https://www.linkedin.com/in/devanshi4/)

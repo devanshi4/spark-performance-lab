@@ -29,10 +29,10 @@ from conf import settings
 from spark_jobs.common.runner import run_experiment
 
 CONF = {
-    "spark.sql.shuffle.partitions": "16",   # same as BEFORE, for a fair comparison
+    "spark.sql.shuffle.partitions": "16",   # same as the baseline, for a fair comparison
     "spark.sql.adaptive.enabled": "true",
-    # The values below are Spark's defaults. They are written out so you can see them
-    # and experiment with changing them.
+    # The values below are Spark's defaults, written out so they're visible
+    # and easy to change.
     "spark.sql.adaptive.skewJoin.enabled": "true",
     "spark.sql.adaptive.skewJoin.skewedPartitionFactor": "5",
     "spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes": "256MB",

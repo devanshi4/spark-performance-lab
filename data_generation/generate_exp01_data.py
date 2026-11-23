@@ -73,7 +73,7 @@ def main():
     )
     merchants.write.mode("overwrite").parquet(str(out / "merchants"))
 
-    # Report the real skew so you know what the data looks like.
+    # Print the actual skew of the generated data.
     counts = (spark.read.parquet(str(out / "transactions"))
               .groupBy("merchant_id").count().orderBy(F.desc("count")).limit(3).collect())
     print("Top merchants by transaction count:")

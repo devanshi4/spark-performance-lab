@@ -1,4 +1,4 @@
-"""Experiment 1 -- BEFORE version (intentionally inefficient).
+"""Experiment 1, baseline: a skewed join run the slow way on purpose.
 
 Business scenario
 -----------------
@@ -25,15 +25,12 @@ from spark_jobs.common.runner import run_experiment
 
 # Spark settings for this run.
 CONF = {
-    # Adaptive Query Execution (AQE) lets Spark change the plan WHILE the query runs, using
-    # statistics it measures after each shuffle. It is ON by default since Spark 3.2.
-    # It is switched OFF here so you see the plan Spark makes with only the information it
-    # has before execution starts. Many older production jobs still run this way.
+    # AQE (on by default since Spark 3.2) re-plans using runtime statistics. I turn it off
+    # here to see the plan Spark picks from pre-execution information alone, which is how
+    # many older production jobs still run.
     "spark.sql.adaptive.enabled": "false",
-    # Number of partitions Spark creates on the receiving side of every shuffle
-    # (join, groupBy). Spark's default is 200. We use 16 (= 4 cores x 4) in EVERY version of
-    # this experiment so that "too many tiny partitions" does not hide the skew problem.
-    # Experiment 3 is about choosing this number.
+    # 16 shuffle partitions (4 cores x 4) in every version of this experiment, so too many
+    # tiny partitions can't hide the skew. Choosing this number is experiment 3.
     "spark.sql.shuffle.partitions": "16",
 }
 
@@ -41,18 +38,13 @@ CONF = {
 def workload(spark, out=None):
     data = settings.DATA_DIR / "exp01"
 
-    # (1) Describe the inputs. Spark reads only Parquet metadata here (schema, file list,
-    #     file sizes). No transaction rows are read yet: Spark is lazy.
     transactions = spark.read.parquet(str(data / "transactions"))
     merchants = spark.read.parquet(str(data / "merchants"))
 
-    # (2) Describe the join. Nothing runs yet.
-    #     Spark must bring every transaction and its merchant row together on ONE executor
-    #     core. How it does that is the "join strategy". Look for the strategy name in the
-    #     plan printed below.
+    # One merchant owns most transactions, so with a sort-merge join all of its rows hash
+    # to the same shuffle partition and a single task does most of the work.
     enriched = transactions.join(merchants, on="merchant_id", how="inner")
 
-    # (3) Describe the aggregation. Nothing runs yet.
     report = (
         enriched
         .withColumn("txn_date", F.to_date("txn_ts"))
@@ -64,12 +56,9 @@ def workload(spark, out=None):
         )
     )
 
-    # (4) Print the physical plan Spark has chosen. explain() does NOT execute anything.
+    # Print the physical plan to confirm the join strategy before running.
     report.explain(mode="formatted")
 
-    # (5) The ACTION. Only now does the driver convert the plan into jobs, stages and tasks
-    #     and send the tasks to the executors. Data is read from Parquet, shuffled, joined,
-    #     aggregated, and the final result is written as Parquet files.
     out = out or settings.OUTPUT_DIR / "exp01" / "before"
     report.write.mode("overwrite").parquet(str(out))
 

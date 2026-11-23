@@ -5,7 +5,7 @@ Same business question, same data, AQE OFF (so the effect comes only from the co
 Observation that leads to this fix
 ----------------------------------
 The report only needs counts and sums per (category, country, day).
-Category and country depend only on merchant_id. So we can first reduce transactions to
+Category and country depend only on merchant_id, so transactions can first be reduced to
 one row per (merchant_id, day), and only then join to merchants.
 
 Why this removes the skew
@@ -19,7 +19,7 @@ map task sends at most ~90 rows for merchant 1, instead of millions.
 A join cannot do this: it has to keep every individual row. That is why skew hurts
 joins (and non-combinable aggregations such as collect_list) much more than sum/count.
 
-Note on averages: avg cannot be re-averaged correctly. We carry sum and count through
+Note on averages: an average of averages is wrong, so sum and count are carried through
 the pipeline and compute avg = sum / count at the end.
 
 Run:  ./scripts/run.sh spark_jobs.optimized.exp01_aggregate_before_join
@@ -31,7 +31,7 @@ from spark_jobs.common.runner import run_experiment
 
 CONF = {
     "spark.sql.adaptive.enabled": "false",
-    "spark.sql.shuffle.partitions": "16",   # same as BEFORE, for a fair comparison
+    "spark.sql.shuffle.partitions": "16",   # same as the baseline, for a fair comparison
 }
 
 

@@ -1,10 +1,10 @@
 """Experiment 1 -- OPTIMIZED version B: manual salting of the hot key.
 
-Same business query and same data as the BEFORE version. AQE stays OFF so that the effect
-you see comes only from salting (in real jobs you would normally keep AQE on as well).
+Same query and data as the baseline. AQE stays off so any improvement comes from salting
+alone (in a real job I would keep AQE on as well).
 
-Idea, in concrete terms
------------------------
+How it works
+------------
 Spark sends a row to shuffle partition  hash(join key) % 16  (16 = spark.sql.shuffle.partitions).
 All 21M rows of merchant 1 have the same key, so they all land in the same partition,
 and one task must process them all.
@@ -27,7 +27,7 @@ from spark_jobs.common.runner import run_experiment
 
 CONF = {
     "spark.sql.adaptive.enabled": "false",
-    "spark.sql.shuffle.partitions": "16",   # same as BEFORE, for a fair comparison
+    "spark.sql.shuffle.partitions": "16",   # same as the baseline, for a fair comparison
 }
 
 # How many pieces to cut each hot key into. With 64 salt values hashed into 16 partitions,

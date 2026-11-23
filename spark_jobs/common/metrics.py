@@ -1,6 +1,6 @@
 """Collects REAL metrics for the current application from Spark's monitoring REST API.
 
-The same numbers you see in the Spark UI come from these endpoints:
+The Spark UI reads its numbers from these same endpoints:
     /api/v1/applications/<app-id>/jobs
     /api/v1/applications/<app-id>/stages
     /api/v1/applications/<app-id>/stages/<stage-id>/<attempt>/taskList
