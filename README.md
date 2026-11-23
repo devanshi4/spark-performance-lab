@@ -6,6 +6,12 @@ A lab where I reproduce common Spark performance problems on a real multi-execut
 
 > Part of my portfolio at **[devanshi4.github.io](https://devanshi4.github.io)**
 
+## Highlights
+
+- **A real bottleneck, reproduced:** 30 million transactions where one merchant owns most of the rows, on a real multi-executor cluster.
+- **Three fixes, compared fairly:** AQE skew join, salting, and aggregating before the join, all with the same data and settings.
+- **Only Spark's own numbers:** metrics come from Spark's REST API, and every fix must return exactly the same answer.
+
 ---
 
 ## The problem
