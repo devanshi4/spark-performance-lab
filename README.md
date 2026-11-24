@@ -9,7 +9,7 @@ A lab where I reproduce common Spark performance problems on a real multi-execut
 ## Highlights
 
 - **A real bottleneck, reproduced:** 30 million transactions where one merchant owns most of the rows, on a real multi-executor cluster.
-- **Three fixes, compared fairly:** AQE skew join, salting, and aggregating before the join, all with the same data and settings.
+- **Three fixes, compared fairly:** AQE skew join, salting, and aggregating before the join, all with the same data and settings. The best one cut the job from 23 s to 17 s and the join stage from 12.7 s to 2.4 s.
 - **Only Spark's own numbers:** metrics come from Spark's REST API, and every fix must return exactly the same answer.
 
 ---
@@ -20,7 +20,7 @@ Most slow Spark jobs come down to a handful of causes: skewed keys, spilling to 
 
 | # | Experiment | Status |
 |---|---|---|
-| 1 | Data skew | done |
+| 1 | Data skew | done, [results below](#results) |
 | 2 | Memory spill | planned |
 | 3 | Partition count | planned |
 | 4 | Join strategy (sort-merge vs broadcast) | planned |
@@ -55,6 +55,25 @@ flowchart LR
 - **Adaptive Query Execution (AQE) skew join.** Spark detects the oversized partition at runtime and splits it. No code changes needed, but it only splits partitions above 256 MB.
 - **Salting.** The hot merchant's join key gets a salt from 0 to 63, spreading its rows over all partitions. Its one row in the merchants table is copied 64 times so every salted key still matches.
 - **Aggregate before joining.** The report only needs sums and counts, so transactions are first reduced to one row per merchant per day. The join then handles a much smaller table and the skew disappears. Sum and count are carried through so the average is computed correctly at the end.
+
+## Results
+
+Measured on a 4-core, 15 GB Linux machine with the lab's default cluster (2 executors × 2 cores × 1 GB). Each version ran twice, and the two runs agreed within about a second. Full numbers are in [`reports/exp01_data_skew_comparison.md`](reports/exp01_data_skew_comparison.md), and the raw metrics are in [`results/`](results/exp01_data_skew/). All three fixes produced exactly the same 7,200-row report as the baseline.
+
+| | Baseline | AQE skew join | Salting | Aggregate before join |
+|---|---|---|---|---|
+| Job runtime | 23.0 s | **17.1 s** (−26%) | 23.9 s (no gain) | **16.9 s** (−27%) |
+| Join stage duration | 12.7 s | 6.6 s | 8.8 s | **2.4 s** |
+| Slowest task vs. median task | 24.5× | 8.0× | 2.5× | 2.1× |
+| Largest shuffle read by one task | 309.8 MB | 68.4 MB | 57.8 MB | **8.8 MB** |
+| Spill to disk | 274 MB | 211 MB | 124 MB | **0** |
+
+**What this shows**
+
+- **The skew is real and easy to see.** In the baseline, one task read 310 MB and ran for 12.7 s while the median task took half a second. The whole job waited on that one task.
+- **AQE is the cheapest fix.** It needs no code change, only a setting, and it cut 26%. It split the hot partition, but the largest piece was still 8× the median.
+- **Salting balanced the work but didn't speed anything up.** The tasks became even (2.5×), but copying the hot merchant 64 times and the extra counting job added as much work as the balance saved. A good reminder that removing skew is not the same as getting faster.
+- **Changing the query beat tuning Spark.** Aggregating to one row per merchant per day before the join shrank the shuffle from 477 MB to 273 MB, removed all spill, and made the join stage 5× faster.
 
 ## Design decisions
 
@@ -137,7 +156,6 @@ You need Java 17 or 21, Python 3.9–3.13, about 8 GB of RAM and 3 GB of free di
 
 ## Status and next steps
 
-- Commit the experiment 1 comparison report with measured task-level results.
 - Build experiments 2 to 5: memory spill, partition count, join strategy, and out-of-memory failures.
 
 ---

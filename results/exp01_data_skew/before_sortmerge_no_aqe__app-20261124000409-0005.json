@@ -1,0 +1,272 @@
+{
+  "experiment": "exp01_data_skew",
+  "variant": "before_sortmerge_no_aqe",
+  "app_id": "app-20261124000409-0005",
+  "app_name": "exp01_data_skew__before_sortmerge_no_aqe",
+  "captured_at": "2026-11-24T00:04:37",
+  "spark_version": "4.0.5",
+  "wall_clock_runtime_s": 22.96,
+  "num_jobs": 3,
+  "num_stages_run": 6,
+  "num_stages_skipped": 0,
+  "num_tasks": 45,
+  "shuffle_read_bytes": 499743677,
+  "shuffle_write_bytes": 499743677,
+  "memory_spill_bytes": 738196096,
+  "disk_spill_bytes": 287444452,
+  "input_bytes": 480309048,
+  "failed_tasks": 0,
+  "succeeded_tasks": 45,
+  "killed_tasks": 0,
+  "gc_time_ms": 1523,
+  "task_duration_ms_all_stages": {
+    "median": 487,
+    "max": 12729
+  },
+  "executors": [
+    {
+      "id": "0",
+      "host_port": "127.0.0.1:43499",
+      "is_active": true,
+      "total_cores": 2,
+      "completed_tasks": 19,
+      "failed_tasks": 0,
+      "total_gc_time_ms": 699,
+      "total_duration_ms": 28852,
+      "removed_reason": null
+    },
+    {
+      "id": "1",
+      "host_port": "127.0.0.1:40515",
+      "is_active": true,
+      "total_cores": 2,
+      "completed_tasks": 26,
+      "failed_tasks": 0,
+      "total_gc_time_ms": 824,
+      "total_duration_ms": 20745,
+      "removed_reason": null
+    },
+    {
+      "id": "driver",
+      "host_port": "127.0.0.1:33917",
+      "is_active": true,
+      "total_cores": 0,
+      "completed_tasks": 0,
+      "failed_tasks": 0,
+      "total_gc_time_ms": 191,
+      "total_duration_ms": 29526,
+      "removed_reason": null
+    }
+  ],
+  "stages": [
+    {
+      "stage_id": 0,
+      "attempt": 0,
+      "status": "COMPLETE",
+      "name": "parquet at NativeMethodAccessorImpl.java:0",
+      "num_tasks": 1,
+      "failed_tasks": 0,
+      "stage_duration_ms": 700,
+      "task_duration_ms": {
+        "min": 692,
+        "median": 692,
+        "p75": 692,
+        "max": 692
+      },
+      "max_over_median_duration": 1.0,
+      "records_per_task": {
+        "min": 0,
+        "median": 0,
+        "max": 0
+      },
+      "shuffle_read_bytes_per_task": {
+        "median": 0,
+        "max": 0
+      },
+      "input_bytes": 0,
+      "shuffle_read_bytes": 0,
+      "shuffle_write_bytes": 0,
+      "memory_spill_bytes": 0,
+      "disk_spill_bytes": 0,
+      "max_task_disk_spill_bytes": 0,
+      "max_task_peak_execution_memory_bytes": 0
+    },
+    {
+      "stage_id": 1,
+      "attempt": 0,
+      "status": "COMPLETE",
+      "name": "parquet at NativeMethodAccessorImpl.java:0",
+      "num_tasks": 1,
+      "failed_tasks": 0,
+      "stage_duration_ms": 54,
+      "task_duration_ms": {
+        "min": 53,
+        "median": 53,
+        "p75": 53,
+        "max": 53
+      },
+      "max_over_median_duration": 1.0,
+      "records_per_task": {
+        "min": 0,
+        "median": 0,
+        "max": 0
+      },
+      "shuffle_read_bytes_per_task": {
+        "median": 0,
+        "max": 0
+      },
+      "input_bytes": 0,
+      "shuffle_read_bytes": 0,
+      "shuffle_write_bytes": 0,
+      "memory_spill_bytes": 0,
+      "disk_spill_bytes": 0,
+      "max_task_disk_spill_bytes": 0,
+      "max_task_peak_execution_memory_bytes": 0
+    },
+    {
+      "stage_id": 2,
+      "attempt": 0,
+      "status": "COMPLETE",
+      "name": "parquet at NativeMethodAccessorImpl.java:0",
+      "num_tasks": 4,
+      "failed_tasks": 0,
+      "stage_duration_ms": 2329,
+      "task_duration_ms": {
+        "min": 1386,
+        "median": 1900.5,
+        "p75": 2321,
+        "max": 2325
+      },
+      "max_over_median_duration": 1.2,
+      "records_per_task": {
+        "min": 250000,
+        "median": 250000.0,
+        "max": 250000
+      },
+      "shuffle_read_bytes_per_task": {
+        "median": 0.0,
+        "max": 0
+      },
+      "input_bytes": 5449576,
+      "shuffle_read_bytes": 0,
+      "shuffle_write_bytes": 13172688,
+      "memory_spill_bytes": 0,
+      "disk_spill_bytes": 0,
+      "max_task_disk_spill_bytes": 0,
+      "max_task_peak_execution_memory_bytes": 0
+    },
+    {
+      "stage_id": 3,
+      "attempt": 0,
+      "status": "COMPLETE",
+      "name": "parquet at NativeMethodAccessorImpl.java:0",
+      "num_tasks": 7,
+      "failed_tasks": 0,
+      "stage_duration_ms": 4086,
+      "task_duration_ms": {
+        "min": 639,
+        "median": 2373,
+        "p75": 2508,
+        "max": 2559
+      },
+      "max_over_median_duration": 1.1,
+      "records_per_task": {
+        "min": 1875000,
+        "median": 4687500,
+        "max": 4687500
+      },
+      "shuffle_read_bytes_per_task": {
+        "median": 0,
+        "max": 0
+      },
+      "input_bytes": 474859472,
+      "shuffle_read_bytes": 0,
+      "shuffle_write_bytes": 483048576,
+      "memory_spill_bytes": 0,
+      "disk_spill_bytes": 0,
+      "max_task_disk_spill_bytes": 0,
+      "max_task_peak_execution_memory_bytes": 0
+    },
+    {
+      "stage_id": 4,
+      "attempt": 0,
+      "status": "COMPLETE",
+      "name": "parquet at NativeMethodAccessorImpl.java:0",
+      "num_tasks": 16,
+      "failed_tasks": 0,
+      "stage_duration_ms": 12734,
+      "task_duration_ms": {
+        "min": 378,
+        "median": 518.5,
+        "p75": 652,
+        "max": 12729
+      },
+      "max_over_median_duration": 24.5,
+      "records_per_task": {
+        "min": 621463,
+        "median": 624292.0,
+        "max": 21626652
+      },
+      "shuffle_read_bytes_per_task": {
+        "median": 11415775.0,
+        "max": 324810177
+      },
+      "input_bytes": 0,
+      "shuffle_read_bytes": 496221264,
+      "shuffle_write_bytes": 3522413,
+      "memory_spill_bytes": 738196096,
+      "disk_spill_bytes": 287444452,
+      "max_task_disk_spill_bytes": 287444452,
+      "max_task_peak_execution_memory_bytes": 312737456
+    },
+    {
+      "stage_id": 5,
+      "attempt": 0,
+      "status": "COMPLETE",
+      "name": "parquet at NativeMethodAccessorImpl.java:0",
+      "num_tasks": 16,
+      "failed_tasks": 0,
+      "stage_duration_ms": 988,
+      "task_duration_ms": {
+        "min": 122,
+        "median": 171.5,
+        "p75": 207,
+        "max": 487
+      },
+      "max_over_median_duration": 2.8,
+      "records_per_task": {
+        "min": 6672,
+        "median": 7208.0,
+        "max": 7824
+      },
+      "shuffle_read_bytes_per_task": {
+        "median": 220540.0,
+        "max": 238381
+      },
+      "input_bytes": 0,
+      "shuffle_read_bytes": 3522413,
+      "shuffle_write_bytes": 0,
+      "memory_spill_bytes": 0,
+      "disk_spill_bytes": 0,
+      "max_task_disk_spill_bytes": 0,
+      "max_task_peak_execution_memory_bytes": 8650736
+    }
+  ],
+  "sql_queries": [
+    {
+      "id": 0,
+      "description": "parquet at NativeMethodAccessorImpl.java:0",
+      "status": "COMPLETED",
+      "duration_ms": 20001,
+      "plan": "== Physical Plan ==\nExecute InsertIntoHadoopFsRelationCommand (17)\n+- WriteFiles (16)\n   +- * HashAggregate (15)\n      +- Exchange (14)\n         +- * HashAggregate (13)\n            +- * Project (12)\n               +- * SortMergeJoin Inner (11)\n                  :- * Sort (5)\n                  :  +- Exchange (4)\n                  :     +- * Filter (3)\n                  :        +- * ColumnarToRow (2)\n                  :           +- Scan parquet  (1)\n                  +- * Sort (10)\n                     +- Exchange (9)\n                        +- * Filter (8)\n                           +- * ColumnarToRow (7)\n                              +- Scan parquet  (6)\n\n\n(1) Scan parquet \nOutput [3]: [merchant_id#1, amount#3, txn_ts#4]\nBatched: true\nLocation: InMemoryFileIndex [file:/home/user/spark-perf-lab/data/exp01/transactions]\nPushedFilters: [IsNotNull(merchant_id)]\nReadSchema: struct<merchant_id:int,amount:double,txn_ts:timestamp>\n\n(2) ColumnarToRow [codegen id : 1]\nInput [3]: [merchant_id#1, amount#3, txn_ts#4]\n\n(3) Filter [codegen id : 1]\nInput [3]: [merchant_id#1, amount#3, txn_ts#4]\nCondition : isnotnull(merchant_id#1)\n\n(4) Exchange\nInput [3]: [merchant_id#1, amount#3, txn_ts#4]\nArguments: hashpartitioning(merchant_id#1, 16), ENSURE_REQUIREMENTS, [plan_id=195]\n\n(5) Sort [codegen id : 2]\nInput [3]: [merchant_id#1, amount#3, txn_ts#4]\nArguments: [merchant_id#1 ASC NULLS FIRST], false, 0\n\n(6) Scan parquet \nOutput [3]: [merchant_id#6, category#8, country#9]\nBatched: true\nLocation: InMemoryFileIndex [file:/home/user/spark-perf-lab/data/exp01/merchants]\nPushedFilters: [IsNotNull(merchant_id)]\nReadSchema: struct<merchant_id:int,category:string,country:string>\n\n(7) ColumnarToRow [codegen id : 3]\nInput [3]: [merchant_id#6, category#8, country#9]\n\n(8) Filter [codegen id : 3]\nInput [3]: [merchant_id#6, category#8, country#9]\nCondition : isnotnull(merchant_id#6)\n\n(9) Exchange\nInput [3]: [merchant_id#6, category#8, country#9]\nArguments: hashpartitioning(merchant_id#6, 16), ENSURE_REQUIREMENTS, [plan_id=204]\n\n(10) Sort [codegen id : 4]\nInput [3]: [merchant_id#6, category#8, country#9]\nArguments: [merchant_id#6 ASC NULLS FIRST], false, 0\n\n(11) SortMergeJoin [codegen id : 5]\nLeft keys [1]: [merchant_id#1]\nRight keys [1]: [merchant_id#6]\nJoin type: Inner\nJoin condition: None\n\n(12) Project [codegen id : 5]\nOutput [4]: [amount#3, category#8, country#9, cast(txn_ts#4 as date) AS txn_date#14]\nInput [6]: [merchant_id#1, amount#3, txn_ts#4, merchant_id#6, category#8, country#9]\n\n(13) HashAggregate [codegen id : 5]\nInput [4]: [amount#3, category#8, country#9, txn_date#14]\nKeys [3]: [category#8, country#9, txn_date#14]\nFunctions [3]: [partial_count(1), partial_sum(amount#3), partial_avg(amount#3)]\nAggregate Attributes [4]: [count#33L, sum#34, sum#35, count#36L]\nResults [7]: [category#8, country#9, txn_date#14, count#37L, sum#38, sum#39, count#40L]\n\n(14) Exchange\nInput [7]: [category#8, country#9, txn_date#14, count#37L, sum#38, sum#39, count#40L]\nArguments: hashpartitioning(category#8, country#9, txn_date#14, 16), ENSURE_REQUIREMENTS, [plan_id=213]\n\n(15) HashAggregate [codegen id : 6]\nInput [7]: [category#8, country#9, txn_date#14, count#37L, sum#38, sum#39, count#40L]\nKeys [3]: [category#8, country#9, txn_date#14]\nFunctions [3]: [count(1), sum(amount#3), avg(amount#3)]\nAggregate Attributes [3]: [count(1)#30L, sum(amount#3)#31, avg(amount#3)#32]\nResults [6]: [category#8, country#9, txn_date#14, count(1)#30L AS txn_count#15L, sum(amount#3)#31 AS total_amount#16, avg(amount#3)#32 AS avg_amount#17]\n\n(16) WriteFiles\nInput [6]: [category#8, country#9, txn_date#14, txn_count#15L, total_amount#16, avg_amount#17]\n\n(17) Execute InsertIntoHadoopFsRelationCommand\nInput: []\nArguments: file:/home/user/spark-perf-lab/output/exp01/before, false, Parquet, [path=/home/user/spark-perf-lab/output/exp01/before], Overwrite, [category, country, txn_date, txn_count, total_amount, avg_amount]\n\n"
+    }
+  ],
+  "relevant_conf": {
+    "spark.executor.extraJavaOptions": "-Djava.net.preferIPv6Addresses=false -XX:+IgnoreUnrecognizedVMOptions --add-modules=jdk.incubator.vector --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.nio.cs=ALL-UNNAMED --add-opens=java.base/sun.security.action=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED -Djdk.reflect.useDirectMethodHandle=false -Dio.netty.tryReflectionSetAccessible=true",
+    "spark.sql.shuffle.partitions": "16",
+    "spark.executor.id": "driver",
+    "spark.executor.cores": "2",
+    "spark.executor.memory": "1g",
+    "spark.sql.adaptive.enabled": "false"
+  }
+}
